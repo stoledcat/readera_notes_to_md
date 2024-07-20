@@ -32,7 +32,6 @@ def write_file(doc_title, citations):
 
 
 def main():
-
     data_string = open_file()["docs"]  # открыть исходный файл
     count = 0
     for item in data_string:
