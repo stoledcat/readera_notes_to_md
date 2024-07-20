@@ -9,6 +9,8 @@ __pycache__/
 # Files
 *.md
 *.json
+*.bak
+*.zip
 
 # Distribution / packaging
 .Python

@@ -22,18 +22,27 @@ def open_file():
         return data
 
 
+# проверка существования отдельного каталога для цитат
+# если он отсутствует, создается
 def write_file(doc_title, citations):
-    os.mkdir('Books')
-    with open(doc_title, "w", encoding="utf-8") as output_file:
+    if os.path.isdir("Books") is False:
+        os.mkdir("Books")
+    with open(f"Books/{doc_title}", "w", encoding="utf-8") as output_file:
         output_file.write(citations)
 
 
 def main():
     data_string = open_file()["docs"]  # открыть исходный файл
+    count = 0
     for item in data_string:
+        count += 1
         citations = ""
-        if item["citations"] != []:
-            doc_title = f'{item["data"]["doc_title"]}.md'  # название книги => имя выходного файла
+        if item["citations"] != [] and item["data"]["doc_format"] in ("fb2", "EPUB"):
+            # название книги => имя выходного файла
+            doc_title = f'{item["data"]["doc_title"]}.md'
+            doc_title = doc_title.replace(":", ";")
+            doc_title = doc_title.replace("/", "-")
+            doc_title = doc_title.replace("?", ".")
             for citation in item["citations"]:
                 if convert_time() < citation["note_insert_time"]:
                     citations += f'>{citation["note_body"]}\n'
