@@ -31,16 +31,21 @@ def write_file(doc_title, citations):
         output_file.write("[[Цитаты]]\n\n" + citations)
 
 
+def replace_symbols(item):
+    doc_title = f'{item["data"]["doc_title"]}.md'
+    doc_title = doc_title.replace(":", ";")
+    doc_title = doc_title.replace("/", "-")
+    doc_title = doc_title.replace("?", ".")
+    return doc_title
+
+
 def main():
     data_string = open_file()["docs"]  # открыть исходный файл
     for item in data_string:
         citations = ""
         if item["citations"] != [] and item["data"]["doc_format"] in ("FB2", "EPUB"):
             # название книги => имя выходного файла
-            doc_title = f'{item["data"]["doc_title"]}.md'
-            doc_title = doc_title.replace(":", ";")
-            doc_title = doc_title.replace("/", "-")
-            doc_title = doc_title.replace("?", ".")
+            doc_title = replace_symbols(item)
             for citation in item["citations"]:
                 if convert_time() < citation["note_insert_time"]:
                     citations += f'>{citation["note_body"]}\n\n'
