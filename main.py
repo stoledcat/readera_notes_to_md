@@ -1,5 +1,6 @@
 import json
 import datetime
+import os
 
 
 """
@@ -22,6 +23,7 @@ def open_file():
 
 
 def write_file(doc_title, citations):
+    os.mkdir('Books')
     with open(doc_title, "w", encoding="utf-8") as output_file:
         output_file.write(citations)
 
