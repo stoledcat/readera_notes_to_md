@@ -10,6 +10,7 @@ import zipfile
 """
 
 
+# конвертировать указанное время в миллисекунды
 def convert_time(year=1970, month=1, day=3, hour=0, min=0, sec=0):
     milliseconds = int(
         datetime.datetime(year, month, day, hour, min, sec).timestamp() * 1000
@@ -17,6 +18,7 @@ def convert_time(year=1970, month=1, day=3, hour=0, min=0, sec=0):
     return milliseconds
 
 
+# запросить начальную дату экспорта цитат
 def enter_date():
     print("Укажите, с какой даты экспортировать цитаты.")
     choose = input("Либо введите '0', чтобы экспортировать все: ")
@@ -26,10 +28,10 @@ def enter_date():
         month = int(month.lstrip('0'))
         day = input("Введите день: ")
         day = int(day.lstrip('0'))
-        return convert_time(year, month, day)
+    return convert_time(year, month, day)
 
 
-# подготовка бэкапа, изменение расширения bak на zip
+# подготовить бэкап, изменить расширение bak на zip
 def prepare_file():
     for filename in os.listdir('.'):
         infilename = os.path.join('.', filename)
@@ -40,7 +42,7 @@ def prepare_file():
     return new_name[2:]
 
 
-# получение данных из файла library
+# получить данные из файла library
 def extract_from_zip():
     input_file = prepare_file()
     with zipfile.ZipFile(input_file, 'r') as archive:
@@ -53,29 +55,34 @@ def extract_from_zip():
     return data
 
 
-# получение списка коллекций из бэкапа
-# создание словаря
-def read_collections(data_colls):
-    colls_dict = {}
-    for item in data_colls:
-        colls_dict.update({item["data"]["coll_title"]:item["docs"]})
-        # colls_dict = {item["docs"]}
-        # if item != []:
-        #     for collections in item:
-        #         if collections == "data":
-        #             print(type(collections))
-        #             colls_list.append(collections)
+# создать словарь {'код книги(sha-1)': 'название коллекции в ReadEra'}
+def create_coll_dict(data_colls):
+    coll_dict = {}
+    for item in data_colls["colls"]:
+        if item["data"]["coll_title"] != []:
+            for docs in item["docs"]:
+                new_key = {docs: item["data"]["coll_title"]}
+                coll_dict.update(new_key)
+    return coll_dict
 
 
-# проверка существования отдельного каталога для цитат
-# если он отсутствует, создается
-def write_file(doc_title, citations):
+# проверить существования отдельного каталога для цитат
+# если он отсутствует, создать
+def write_file_with_collection(doc_title, collection, citations):
     if os.path.isdir("Books") is False:
         os.mkdir("Books")
     with open(f"Books/{doc_title}", "w", encoding="utf-8") as output_file:
-        output_file.write("[[Цитаты]]\n\n" + citations)
+        output_file.write(f'[[{collection}]]\n[[Цитаты]]\n\n' + citations)
 
 
+def write_file_without_collection(doc_title, citations):
+    if os.path.isdir("Books") is False:
+        os.mkdir("Books")
+    with open(f"Books/{doc_title}", "w", encoding="utf-8") as output_file:
+        output_file.write('[[Цитаты]]\n\n' + citations)
+
+
+# заменить в названии файлов запрещенные символы
 def replace_symbols(item):
     doc_title = f'{item["data"]["doc_title"]}.md'
     doc_title = doc_title.replace(":", ";")
@@ -86,18 +93,22 @@ def replace_symbols(item):
 
 def main():
     # enter_date()
-    data_docs = extract_from_zip()["docs"]  # получение данных файлов
-    data_colls = extract_from_zip()["colls"]  # получение данных коллекций
-    read_collections(data_colls)
+    data_docs = extract_from_zip()["docs"]  # получить данные файлов
+    data_colls = extract_from_zip()  # получить данные коллекций
+    collection = create_coll_dict(data_colls)
     for item in data_docs:
         citations = ""
-        if item["citations"] != [] and item["data"]["doc_format"] in ("FB2", "EPUB", "MOBI"):
-            # название книги => имя выходного файла
-            doc_title = replace_symbols(item)
-            for citation in item["citations"]:
-                if convert_time() < citation["note_insert_time"]:
-                    citations += f'>{citation["note_body"]}\n\n'
-            write_file(doc_title, citations)
+        book_key = item["uri"]
+        if item["data"]["doc_format"] in ("FB2", "EPUB", "MOBI"):
+            if item["citations"] != []:
+                doc_title = replace_symbols(item)
+                for citation in item["citations"]:
+                    if convert_time() < citation["note_insert_time"]:
+                        citations += f'>{citation["note_body"]}\n\n'
+                if book_key in collection:
+                    write_file_with_collection(doc_title, collection[book_key], citations)
+                else:
+                    write_file_without_collection(doc_title, citations)
 
 
 if __name__ == "__main__":
