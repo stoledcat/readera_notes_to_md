@@ -53,6 +53,20 @@ def extract_from_zip():
     return data
 
 
+# получение списка коллекций из бэкапа
+# создание словаря
+def read_collections(data_colls):
+    colls_dict = {}
+    for item in data_colls:
+        colls_dict.update({item["data"]["coll_title"]:item["docs"]})
+        # colls_dict = {item["docs"]}
+        # if item != []:
+        #     for collections in item:
+        #         if collections == "data":
+        #             print(type(collections))
+        #             colls_list.append(collections)
+
+
 # проверка существования отдельного каталога для цитат
 # если он отсутствует, создается
 def write_file(doc_title, citations):
@@ -72,8 +86,10 @@ def replace_symbols(item):
 
 def main():
     # enter_date()
-    data_string = extract_from_zip()["docs"]  # открыть исходный файл
-    for item in data_string:
+    data_docs = extract_from_zip()["docs"]  # получение данных файлов
+    data_colls = extract_from_zip()["colls"]  # получение данных коллекций
+    read_collections(data_colls)
+    for item in data_docs:
         citations = ""
         if item["citations"] != [] and item["data"]["doc_format"] in ("FB2", "EPUB", "MOBI"):
             # название книги => имя выходного файла
