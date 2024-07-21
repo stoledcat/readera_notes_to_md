@@ -25,19 +25,20 @@ def enter_date():
     if int(choose) != 0:
         year = int(input("Введите год: "))
         month = input("Введите месяц: ")
-        month = int(month.lstrip('0'))
+        month = int(month.lstrip("0"))
         day = input("Введите день: ")
-        day = int(day.lstrip('0'))
+        day = int(day.lstrip("0"))
     return convert_time(year, month, day)
 
 
 # подготовить бэкап, изменить расширение bak на zip
 def prepare_file():
-    for filename in os.listdir('.'):
-        infilename = os.path.join('.', filename)
-        if not os.path.isfile(infilename): continue
+    for filename in os.listdir("."):
+        infilename = os.path.join(".", filename)
+        if not os.path.isfile(infilename):
+            continue
         os.path.splitext(filename)
-        new_name = infilename.replace('.bak', '.zip')
+        new_name = infilename.replace(".bak", ".zip")
         os.rename(infilename, new_name)
     return new_name[2:]
 
@@ -45,12 +46,12 @@ def prepare_file():
 # получить данные из файла library
 def extract_from_zip():
     input_file = prepare_file()
-    with zipfile.ZipFile(input_file, 'r') as archive:
+    with zipfile.ZipFile(input_file, "r") as archive:
         file_list = archive.namelist()
         for file_name in file_list:
-            if file_name == 'library.json':
+            if file_name == "library.json":
                 with archive.open(file_name) as json_file:
-                    json_data = json_file.read().decode('utf-8')
+                    json_data = json_file.read().decode("utf-8")
                     data = json.loads(json_data)
     return data
 
@@ -72,14 +73,14 @@ def write_file_with_collection(doc_title, collection, citations):
     if os.path.isdir("Books") is False:
         os.mkdir("Books")
     with open(f"Books/{doc_title}", "w", encoding="utf-8") as output_file:
-        output_file.write(f'[[{collection}]]\n[[Цитаты]]\n\n' + citations)
+        output_file.write(f"[[{collection}]]\n[[Цитаты]]\n\n" + citations)
 
 
 def write_file_without_collection(doc_title, citations):
     if os.path.isdir("Books") is False:
         os.mkdir("Books")
     with open(f"Books/{doc_title}", "w", encoding="utf-8") as output_file:
-        output_file.write('[[Цитаты]]\n\n' + citations)
+        output_file.write("[[Цитаты]]\n\n" + citations)
 
 
 # заменить в названии файлов запрещенные символы
@@ -106,7 +107,9 @@ def main():
                     if convert_time() < citation["note_insert_time"]:
                         citations += f'>{citation["note_body"]}\n\n'
                 if book_key in collection:
-                    write_file_with_collection(doc_title, collection[book_key], citations)
+                    write_file_with_collection(
+                        doc_title, collection[book_key], citations
+                    )
                 else:
                     write_file_without_collection(doc_title, citations)
 
