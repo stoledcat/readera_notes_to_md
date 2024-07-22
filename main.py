@@ -40,7 +40,9 @@ def prepare_file():
         os.path.splitext(filename)
         new_name = infilename.replace(".bak", ".zip")
         os.rename(infilename, new_name)
-    return new_name[2:]
+        if new_name.endswith(".zip"):
+            zip_file = new_name
+    return zip_file[2:]
 
 
 # получить данные из файла library
