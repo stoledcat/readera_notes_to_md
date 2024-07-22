@@ -11,24 +11,24 @@ import zipfile
 
 
 # конвертировать указанное время в миллисекунды
-def convert_time(year=1970, month=1, day=3, hour=0, min=0, sec=0):
+def convert_time(year=2023, month=7, day=10, hour=0, min=0, sec=0):
     milliseconds = int(
         datetime.datetime(year, month, day, hour, min, sec).timestamp() * 1000
     )
     return milliseconds
 
 
-# запросить начальную дату экспорта цитат
-def enter_date():
-    print("Укажите, с какой даты экспортировать цитаты.")
-    choose = input("Либо введите '0', чтобы экспортировать все: ")
-    if int(choose) != 0:
-        year = int(input("Введите год: "))
-        month = input("Введите месяц: ")
-        month = int(month.lstrip("0"))
-        day = input("Введите день: ")
-        day = int(day.lstrip("0"))
-    return convert_time(year, month, day)
+# # запросить начальную дату экспорта цитат
+# def enter_date():
+#     print("Укажите, с какой даты экспортировать цитаты.")
+#     choose = input("Либо введите '0', чтобы экспортировать все: ")
+#     if int(choose) != 0:
+#         year = int(input("Введите год: "))
+#         month = input("Введите месяц: ")
+#         month = int(month.lstrip("0"))
+#         day = input("Введите день: ")
+#         day = int(day.lstrip("0"))
+#     return convert_time(year, month, day)
 
 
 # подготовить бэкап, изменить расширение bak на zip
@@ -94,26 +94,43 @@ def replace_symbols(item):
     return doc_title
 
 
+# создать хранилище с цитатами
+def make_citations(item):
+    count = 0
+    citations = ""
+    for citation in item["citations"]:
+        if convert_time() < citation["note_insert_time"]:
+            count += 1
+            citations += f'>{citation["note_body"]}\n\n'
+    if count >= 1:
+        citations = ""
+        for citation in item["citations"]:
+            citations += f'>{citation["note_body"]}\n\n'
+    return citations
+
+
+def make_books(book_key, doc_title, collection, citations):
+    if citations != "":
+        if book_key in collection:
+            write_file_with_collection(
+                doc_title, collection[book_key], citations
+                )
+        elif book_key not in collection:
+            write_file_without_collection(doc_title, citations)
+
+
 def main():
     # enter_date()
     data_docs = extract_from_zip()["docs"]  # получить данные файлов
     data_colls = extract_from_zip()  # получить данные коллекций
     collection = create_coll_dict(data_colls)
     for item in data_docs:
-        citations = ""
         book_key = item["uri"]
         if item["data"]["doc_format"] in ("FB2", "EPUB", "MOBI"):
             if item["citations"] != []:
                 doc_title = replace_symbols(item)
-                for citation in item["citations"]:
-                    if convert_time() < citation["note_insert_time"]:
-                        citations += f'>{citation["note_body"]}\n\n'
-                if book_key in collection:
-                    write_file_with_collection(
-                        doc_title, collection[book_key], citations
-                    )
-                else:
-                    write_file_without_collection(doc_title, citations)
+                citations = make_citations(item)
+                make_books(book_key, doc_title, collection, citations)
 
 
 if __name__ == "__main__":
