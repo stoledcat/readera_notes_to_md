@@ -11,7 +11,7 @@ import zipfile
 
 
 # конвертировать указанное время в миллисекунды
-def convert_time(year=2023, month=7, day=10, hour=0, min=0, sec=0):
+def convert_time(year=1970, month=1, day=3, hour=0, min=0, sec=0):
     milliseconds = int(
         datetime.datetime(year, month, day, hour, min, sec).timestamp() * 1000
     )
