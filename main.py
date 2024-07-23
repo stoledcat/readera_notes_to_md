@@ -17,6 +17,12 @@ def convert_time(year=1970, month=1, day=3, hour=0, min=0, sec=0):
     )
     return milliseconds
 
+#
+def select_metafile():
+    print("Выберите название метафайла,")
+    metafile = input("на который будут ссылаться все цитаты: ")
+    return metafile
+
 
 # # запросить начальную дату экспорта цитат
 # def enter_date():
@@ -71,18 +77,18 @@ def create_coll_dict(data_colls):
 
 # проверить существования отдельного каталога для цитат
 # если он отсутствует, создать
-def write_file_with_collection(doc_title, collection, citations):
+def write_file_with_collection(doc_title, collection, citations, metafile):
     if os.path.isdir("Books") is False:
         os.mkdir("Books")
     with open(f"Books/{doc_title}", "w", encoding="utf-8") as output_file:
-        output_file.write(f"[[{collection}]]\n[[Цитаты]]\n\n" + citations)
+        output_file.write(f"[[{collection}]]\n[[{metafile}]]\n\n" + citations)
 
 
-def write_file_without_collection(doc_title, citations):
+def write_file_without_collection(doc_title, citations, metafile):
     if os.path.isdir("Books") is False:
         os.mkdir("Books")
     with open(f"Books/{doc_title}", "w", encoding="utf-8") as output_file:
-        output_file.write("[[Цитаты]]\n\n" + citations)
+        output_file.write(f"[[{metafile}]]\n\n" + citations)
 
 
 # заменить в названии файлов запрещенные символы
@@ -109,18 +115,19 @@ def make_citations(item):
     return citations
 
 
-def make_books(book_key, doc_title, collection, citations):
+def make_books(book_key, doc_title, collection, citations, metafile):
     if citations != "":
         if book_key in collection:
             write_file_with_collection(
-                doc_title, collection[book_key], citations
-                )
+                doc_title, collection[book_key], citations,
+                metafile)
         elif book_key not in collection:
-            write_file_without_collection(doc_title, citations)
+            write_file_without_collection(doc_title, citations, metafile)
 
 
 def main():
     # enter_date()
+    metafile = select_metafile()
     data_docs = extract_from_zip()["docs"]  # получить данные файлов
     data_colls = extract_from_zip()  # получить данные коллекций
     collection = create_coll_dict(data_colls)
@@ -130,7 +137,8 @@ def main():
             if item["citations"] != []:
                 doc_title = replace_symbols(item)
                 citations = make_citations(item)
-                make_books(book_key, doc_title, collection, citations)
+                make_books(book_key, doc_title, collection, citations,
+                           metafile)
 
 
 if __name__ == "__main__":
